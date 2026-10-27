@@ -1,90 +1,72 @@
 # FlymeDuo
 
-把 Flyme 状态栏里的 **Wi-Fi、移动信号、电量** 合并成一个仿 iPhone「Duo」风格的三合一图标。
+Gộp **Wi-Fi, tín hiệu di động và pin** trên thanh trạng thái Flyme thành một biểu tượng ba trong một, theo phong cách “Duo” của iPhone.
 
-FlymeDuo 是 [HyperDuo](https://github.com/yixing233/HyperDuo) 的 **Flyme 适配版**：渲染内核
-（几何、配色、组件编排）与上游一致，系统界面侧的注入点全部换成了 Flyme 的实现——
-`FlymeBatteryMeterView`、`QSStatusBar`、`KeyguardStatusBarView`、`NotificationPanelView`。
+FlymeDuo là **bản thích ứng cho Flyme** của [HyperDuo](https://github.com/yixing233/HyperDuo): phần lõi kết xuất (hình học, phối màu, sắp xếp thành phần) giống bản gốc, còn tất cả các điểm chèn phía giao diện hệ thống đều được thay bằng bản triển khai của Flyme: `FlymeBatteryMeterView`, `QSStatusBar`, `KeyguardStatusBarView`, `NotificationPanelView`.
 
-## 适配了什么
+## Những gì đã được thích ứng
 
-### 三个位置，一颗环
+### Ba vị trí, một chiếc vòng
 
-- **普通状态栏**：环画在 `system_icons` 的电池槽里；
-- **控制中心**：`QSStatusBar` 顶栏（可在生效范围里排除）；
-- **通知中心 / 锁屏头部**：`keyguard_status_bar`（Flyme 里它被 include 进通知面板，
-  是同一颗视图，不会被误判成状态栏）。
+- **Thanh trạng thái thông thường**: vòng được vẽ trong ô pin của `system_icons`;
+- **Trung tâm điều khiển**: thanh trên cùng của `QSStatusBar` (có thể loại trừ trong phần phạm vi áp dụng);
+- **Trung tâm thông báo / phần đầu màn hình khoá**: `keyguard_status_bar` (trong Flyme, nó được include vào bảng thông báo và là cùng một view, nên không bị nhận nhầm là thanh trạng thái).
 
-三处的电池、Wi-Fi、信号槽都由模块接管：画环时原厂图标让位，排除时整体交还原厂。
+Các ô pin, Wi-Fi và tín hiệu ở cả ba vị trí đều do mô-đun tiếp quản: khi vẽ vòng, biểu tượng gốc nhường chỗ; khi bị loại trừ, toàn bộ được trả lại cho hệ thống gốc.
 
-### 整体缩放：以状态栏高度为基准
+### Thu phóng chung: lấy chiều cao thanh trạng thái làm chuẩn
 
-Flyme 的测量把电池视图锁死在电池图标的本征盒里（约 10dp），环的 120 单位设计空间被压扁。
-适配版改写了 `onMeasure`：**三个位置统一以状态栏高度（140px ≈ 43dp）为 100%**，普通状态栏
-那一行只有 65px，装不下就对父链放开裁剪、溢出绘制进窗口余量。设置里的「图标整体尺寸」
-滑条（60–100%）三处一致生效。
+Phép đo của Flyme khoá view pin trong hộp nội tại của biểu tượng pin (khoảng 10dp), làm không gian thiết kế 120 đơn vị của vòng bị ép dẹt. Bản thích ứng viết lại `onMeasure`: **cả ba vị trí đều lấy chiều cao thanh trạng thái (140px ≈ 43dp) làm 100%**. Hàng ở thanh trạng thái thông thường chỉ cao 65px, không đủ chỗ, nên mô-đun mở khoá việc cắt xén đối với chuỗi view cha và cho phép vẽ tràn vào phần dư của cửa sổ. Thanh trượt “Kích thước chung của biểu tượng” (60–100%) trong cài đặt có hiệu lực đồng nhất ở cả ba vị trí.
 
-### 生效范围
+### Phạm vi áp dụng
 
-**全部 / 排除控制中心 / 排除通知中心 / 排除两者**。被排除的位置保留 Flyme 原厂电池与图标，
-显示方式由原厂决定。区域按真实父链归类、挂载后重判——Flyme 在挂载前就测量视图，
-过早归类会把所有面误判成状态栏（.33 之前排除失效的根因）。
+**Tất cả / Loại trừ Trung tâm điều khiển / Loại trừ Trung tâm thông báo / Loại trừ cả hai.** Vị trí bị loại trừ giữ nguyên pin và biểu tượng gốc của Flyme, cách hiển thị do bản gốc quyết định. Khu vực được phân loại theo chuỗi view cha thực tế và được xác định lại sau khi gắn vào: Flyme đo view trước khi nó được gắn, nên phân loại quá sớm sẽ khiến mọi vùng bị nhận nhầm là thanh trạng thái (đây là nguyên nhân gốc khiến việc loại trừ không hiệu lực trước bản .33).
 
-### 其余能力
+### Các tính năng còn lại
 
-与上游一致：环内电量数字 / Wi-Fi 弧 / 信号点 / 网络类型 / 充电闪电可逐项开关或交还系统，
-胶囊布局，环外信号卡、5G 标签（按所在格宽度自适应字号）、充电功率、电池温度。架构与实现
-细节见 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)（上游文档，Flyme 注入点在
-`FlymeHooks.java`）。
+Giống bản gốc: số phần trăm pin, cung Wi-Fi, chấm tín hiệu, loại mạng và tia sét sạc trong vòng đều có thể bật/tắt từng mục hoặc trả lại cho hệ thống; bố cục viên nang; thẻ tín hiệu ngoài vòng; nhãn 5G (cỡ chữ tự thích ứng theo độ rộng ô chứa); công suất sạc; nhiệt độ pin. Chi tiết về kiến trúc và triển khai xem [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) (tài liệu của bản gốc; các điểm chèn của Flyme nằm trong `FlymeHooks.java`).
 
-## 安装
+## Cài đặt
 
-| 项目 | 要求 |
+| Hạng mục | Yêu cầu |
 | --- | --- |
-| 系统 | Flyme AIOS 2（Android 16，API 36）；同代 Flyme 理论可用 |
-| 框架 | LSPosed（libxposed API 102+），已在 2.2.1 上验证 |
+| Hệ thống | Flyme AIOS 2 (Android 16, API 36); các Flyme cùng thế hệ về lý thuyết cũng dùng được |
+| Khung | LSPosed (libxposed API 102+), đã kiểm chứng trên 2.2.1 |
 
-1. 从 [Releases](https://github.com/leyodr9000/FlymeDuo/releases) 下载最新的
-   `FlymeDuo-*.apk` 并安装。
-2. LSPosed → 模块 → 启用 **FlymeDuo**，作用域勾选 **系统界面（`com.android.systemui`）**。
-3. 重启系统界面：
+1. Tải `FlymeDuo-*.apk` mới nhất từ [Releases](https://github.com/leyodr9000/FlymeDuo/releases) và cài đặt.
+2. LSPosed → Mô-đun → bật **FlymeDuo**, trong phạm vi chọn **Giao diện hệ thống (`com.android.systemui`)**.
+3. Khởi động lại Giao diện hệ thống:
 
 ```sh
 adb shell "su -c 'pkill -f com.android.systemui'"
 ```
 
-装完 pkill 后如果状态栏变回原厂：LSPosed 把**每一次系统界面进程重启**都计为一次「崩溃」，
-累计 4 次会进入模块安全模式——去 LSPosed 重新勾选模块即可，不是模块崩了。
+Nếu sau khi `pkill` thanh trạng thái trở về như gốc: LSPosed tính **mỗi lần tiến trình Giao diện hệ thống khởi động lại** là một lần “crash”, tích luỹ 4 lần sẽ vào chế độ an toàn của mô-đun. Chỉ cần vào LSPosed chọn lại mô-đun, không phải mô-đun bị lỗi.
 
-## 排查
+## Gỡ lỗi
 
 ```powershell
 adb logcat -v time -s LSPosedFramework:* | Select-String HyperDuo
 ```
 
-模块在系统界面里的输出都由框架代打（tag `LSPosedFramework`）。启动行
-`flyme adapter build x.y.z, hooks=N` 确认适配层已加载；每个电池宿主会打
-`battery region=…`（归到哪个面）和 `battery box …`（行高、边长、排除判定），
-这两行能直接定位「不生效 / 大小不对」属于哪一类问题。
+Mọi đầu ra của mô-đun trong Giao diện hệ thống đều do khung ghi hộ (tag `LSPosedFramework`). Dòng khởi động `flyme adapter build x.y.z, hooks=N` xác nhận lớp thích ứng đã được nạp; mỗi máy chủ pin sẽ in `battery region=…` (thuộc vùng nào) và `battery box …` (chiều cao hàng, độ dài cạnh, kết quả xét loại trừ). Hai dòng này giúp xác định ngay lỗi “không có hiệu lực / sai kích thước” thuộc loại nào.
 
-## 开发
+## Phát triển
 
 ```sh
 gradle assembleRelease -PhyperduoVersionName=1.7.5-flyme.38 -PhyperduoVersionCode=10742
 ```
 
-分支 `flyme-adapter`，上游同步采用 rebase。渲染内核（`TrioRenderer` / `TrioGeometry` /
-`TrioConfig`）尽量不动，Flyme 差异全部收敛在 `FlymeHooks.java`。
+Nhánh `flyme-adapter`, đồng bộ với bản gốc bằng rebase. Phần lõi kết xuất (`TrioRenderer` / `TrioGeometry` / `TrioConfig`) cố gắng không đụng tới; mọi khác biệt của Flyme đều gom vào `FlymeHooks.java`.
 
-## 致谢
+## Lời cảm ơn
 
-- **[HyperDuo](https://github.com/yixing233/HyperDuo)** —— 本 fork 的一切基础
-- **FlymeBarSizer 群友 知秋** —— Flyme 适配参考
-- 设置界面基于 Compose + [Miuix](https://github.com/miuix-kotlin-multiplatform/miuix)
+- **[HyperDuo](https://github.com/yixing233/HyperDuo)**: nền tảng cho toàn bộ bản fork này
+- **知秋, thành viên nhóm FlymeBarSizer**: tham khảo thích ứng cho Flyme
+- Giao diện cài đặt dựa trên Compose + [Miuix](https://github.com/miuix-kotlin-multiplatform/miuix)
 
-## 许可证
+## Giấy phép
 
-**GNU General Public License v3.0（GPL-3.0）**，全文见 [LICENSE](LICENSE)。
+**GNU General Public License v3.0 (GPL-3.0)**, toàn văn xem [LICENSE](LICENSE).
 
-Copyright (C) 2026 yixing233 与 HyperDuo 贡献者；FlymeDuo 修改部分同样以 GPL-3.0 发布。
-分发编译好的 APK 时需要一并给出对应源码，指向本仓库该版本的 tag 即可。没有担保。
+Copyright (C) 2026 yixing233 và những người đóng góp cho HyperDuo; phần FlymeDuo sửa đổi cũng được phát hành theo GPL-3.0. Khi phân phối APK đã biên dịch, cần kèm theo mã nguồn tương ứng, trỏ tới tag của phiên bản đó trong kho này là đủ. Không có bảo hành.
